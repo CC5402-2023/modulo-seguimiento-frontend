@@ -1,7 +1,7 @@
 import {
   CategoriaTTO,
   SubcategoriaTTOCirugiaOProcedimientoQuirurgico,
-  SubcategoriaTTOTerapiaSistematica,
+  SubcategoriaTTOTerapiaSistemica,
   SubcategoriaTTORadioterapia,
   SubcategoriaTTOOtro,
   IntencionTTO,
@@ -14,7 +14,7 @@ export interface TratamientoAntesFALPBase {
   categoria_tto: CategoriaTTO;
   subcategoria_tto:
     | SubcategoriaTTOCirugiaOProcedimientoQuirurgico
-    | SubcategoriaTTOTerapiaSistematica
+    | SubcategoriaTTOTerapiaSistemica
     | SubcategoriaTTORadioterapia
     | SubcategoriaTTOOtro;
   lugar_tto: LugarTTO;

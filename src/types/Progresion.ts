@@ -3,7 +3,7 @@ import { TipoRecurrenciaProgresion } from "./Enums";
 export interface ProgresionBase {
   fecha_diagnostico: Date;
   fecha_estimada: boolean;
-  tipo: Object | TipoRecurrenciaProgresion;
+  tipo: TipoRecurrenciaProgresion;
   detalle_topografia_progresion: string;
 }
 
@@ -19,4 +19,16 @@ export interface Progresion extends ProgresionBase {
   caso_registro_id: number;
   created_at: Date;
   updated_at: Date;
+}
+
+/**
+ * ProgresionFormValues interface, used for representing the values of the
+ * progresion form before submitting it. When we submit this form, we will
+ * create a new ProgresionCreate object with the values of this interface.
+ */
+export interface ProgresionFormValues {
+  fecha_diagnostico: Date | null;
+  fecha_estimada: boolean;
+  tipo: TipoRecurrenciaProgresion | null;
+  detalle_topografia_progresion: string | null;
 }

@@ -7,7 +7,6 @@ import {
   Controller,
   useForm,
   useFormContext,
-  useWatch,
   SubmitHandler,
 } from "react-hook-form";
 import DatePicker from "./DatePicker";
@@ -16,11 +15,22 @@ import SelectInput from "./SelectInput";
 import Button from "./Button";
 import TextInput from "./TextInput";
 import { Seguimiento } from "@/types/Seguimiento";
-import { Metastasis } from "@/types/Metastasis";
-import { Recurrencia } from "@/types/Recurrencia";
-import { Progresion } from "@/types/Progresion";
-import { TratamientoEnFALP } from "@/types/TratamientoEnFALP";
-import * as fns from "date-fns";
+import { Metastasis, MetastasisFormValues } from "@/types/Metastasis";
+import { Recurrencia, RecurrenciaFormValues } from "@/types/Recurrencia";
+import { Progresion, ProgresionFormValues } from "@/types/Progresion";
+import {
+  TratamientoEnFALP,
+  TratamientoEnFALPFormValues,
+} from "@/types/TratamientoEnFALP";
+import {
+  CategoriaTTO,
+  IntencionTTO,
+  TipoRecurrenciaProgresion,
+} from "@/types/Enums";
+import {
+  defaultSubcategoriaTTOForCategoriaTTO,
+  subcategoriaTTOForCategoriaTTO,
+} from "@/utils/subcategoriaTTOSelector";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   filled?: boolean;
@@ -56,47 +66,66 @@ export default function Modal(props: ButtonProps) {
     morePatientInfo,
     sign,
   } = props;
-  let [isOpenMetastasis, setIsOpenMetastasis] = useState(false);
-  let [isOpenRecurrencia, setIsOpenRecurrencia] = useState(false);
-  let [isOpenProgresion, setIsOpenProgresion] = useState(false);
-  let [isOpenTratamiento, setIsOpenTratamiento] = useState(false);
-  let [isOpenMoreInfo, setIsOpenMoreInfo] = useState(false);
-  let [isOpenSign, setIsOpenSign] = useState(false);
+
   const { control, register } = useFormContext();
 
   const caso = seguimiento.caso_registro_correspondiente;
-  interface MetastasisValues {
-    fecha_diagnostico: Date | null;
-    fecha_estimada: boolean;
-    detalle_topografia: null | string;
-  }
 
-  const metastasisForm = useForm<MetastasisValues>({
+  // ================ METASTASIS FORM =================
+
+  const metastasisForm = useForm<MetastasisFormValues>({
     mode: "onChange",
     defaultValues: {
-      fecha_diagnostico: null, //
-      fecha_estimada: false, //
-      detalle_topografia: null, //
+      fecha_diagnostico: null,
+      fecha_estimada: false,
+      detalle_topografia: null,
     },
   });
 
-  const { watch: watchMetastais } = metastasisForm;
-  const detalle_topografia = watchMetastais("detalle_topografia");
-  const fecha_diagnostico = watchMetastais("fecha_diagnostico");
+  const { watch: watchMetastasis } = metastasisForm;
+  const detalle_topografia = watchMetastasis("detalle_topografia");
+  const fecha_diagnostico = watchMetastasis("fecha_diagnostico");
 
-  interface RecurrenciaValues {
-    fecha_diagnostico: null | Date;
-    fecha_estimada: boolean;
-    tipo: null | { id: number; name: string };
-    detalle_topografia_recurrencia: null | string;
+  let [isOpenMetastasis, setIsOpenMetastasis] = useState(false);
+
+  function closeModalMetastasis() {
+    setIsOpenMetastasis(false);
   }
 
-  const recurrenciaForm = useForm<RecurrenciaValues>({
+  function openModalMetastasis() {
+    setIsOpenMetastasis(true);
+  }
+
+  const addMetastasis: SubmitHandler<MetastasisFormValues> = (data, event) => {
+    event?.stopPropagation();
+    if (data.fecha_diagnostico !== null && data.detalle_topografia !== null) {
+      const newMetastasis: Metastasis = {
+        id: 0, // Irrelevant, it will be assigned by the backend
+        seguimiento_id: seguimiento.id,
+        caso_registro_id: seguimiento.caso_registro_id,
+        created_at: new Date(),
+        updated_at: new Date(),
+        fecha_diagnostico: data.fecha_diagnostico,
+        fecha_estimada: data.fecha_estimada,
+        detalle_topografia: data.detalle_topografia,
+      };
+      setNewMetastasisList((prev: Metastasis[]) => {
+        return [...prev, newMetastasis];
+      });
+      closeModalMetastasis();
+    }
+    // TODO: this shouldn't close the modal, instead it should show an error
+    closeModalMetastasis();
+  };
+
+  // ================ RECURRENCIA FORM =================
+
+  const recurrenciaForm = useForm<RecurrenciaFormValues>({
     defaultValues: {
-      fecha_diagnostico: null, //
-      fecha_estimada: false, //
-      tipo: null, //
-      detalle_topografia_recurrencia: null, //
+      fecha_diagnostico: null,
+      fecha_estimada: false,
+      tipo: null,
+      detalle_topografia_recurrencia: null,
     },
   });
 
@@ -107,14 +136,43 @@ export default function Modal(props: ButtonProps) {
   );
   const fecha_diagnostico_recurrencia = watchRecurrencia("fecha_diagnostico");
 
-  interface ProgresionValues {
-    fecha_diagnostico: null | Date;
-    fecha_estimada: boolean;
-    tipo: null | { id: number; name: string };
-    detalle_topografia_progresion: null | string;
+  let [isOpenRecurrencia, setIsOpenRecurrencia] = useState(false);
+
+  function closeModalRecurrencia() {
+    setIsOpenRecurrencia(false);
   }
 
-  const progresionForm = useForm<ProgresionValues>({
+  function openModalRecurrencia() {
+    setIsOpenRecurrencia(true);
+  }
+
+  const addRecurrencia: SubmitHandler<RecurrenciaFormValues> = (data) => {
+    if (
+      data.fecha_diagnostico !== null &&
+      data.tipo !== null &&
+      data.detalle_topografia_recurrencia !== null
+    ) {
+      const newRecurrencia: Recurrencia = {
+        id: 0, // Irrelevant, it will be assigned by the backend
+        seguimiento_id: seguimiento.id,
+        caso_registro_id: seguimiento.caso_registro_id,
+        created_at: new Date(),
+        updated_at: new Date(),
+        fecha_diagnostico: data.fecha_diagnostico,
+        fecha_estimada: data.fecha_estimada,
+        tipo: data.tipo,
+        detalle_topografia_recurrencia: data.detalle_topografia_recurrencia,
+      };
+      setNewRecurrenciaList((prev: Recurrencia[]) => {
+        return [...prev, newRecurrencia];
+      });
+      closeModalRecurrencia();
+    }
+  };
+
+  // ================ PROGRESION FORM =================
+
+  const progresionForm = useForm<ProgresionFormValues>({
     defaultValues: {
       fecha_diagnostico: null, //
       fecha_estimada: false, //
@@ -130,55 +188,7 @@ export default function Modal(props: ButtonProps) {
   );
   const fecha_diagnostico_progresion = watchProgresion("fecha_diagnostico");
 
-  interface TratamientoValues {
-    medico: null | string;
-    fecha_inicio: null | Date;
-    fecha_termino: null | Date;
-    en_tto: boolean;
-    categoria_tto: null | { name: string };
-    subcategoria_tto: null | { name: string };
-    intencion_tto: null | { name: string };
-    observaciones: null | string;
-  }
-
-  const tratamientoForm = useForm<TratamientoValues>({
-    defaultValues: {
-      medico: null, //
-      fecha_inicio: null, //
-      fecha_termino: null, //
-      en_tto: false, //
-      categoria_tto: null, //
-      subcategoria_tto: null, //
-      intencion_tto: null, //
-      observaciones: null, //
-    },
-  });
-
-  const { watch: watchTratamiento } = tratamientoForm;
-  const medico = watchTratamiento("medico");
-  const fecha_inicio = watchTratamiento("fecha_inicio");
-  const fecha_termino = watchTratamiento("fecha_termino");
-  const categoria_tto = watchTratamiento("categoria_tto");
-  const subcategoria_tto = watchTratamiento("subcategoria_tto");
-  const intencion_tto = watchTratamiento("intencion_tto");
-  const observaciones = watchTratamiento("observaciones");
-  const en_tto = watchTratamiento("en_tto");
-
-  function closeModalMetastasis() {
-    setIsOpenMetastasis(false);
-  }
-
-  function openModalMetastasis() {
-    setIsOpenMetastasis(true);
-  }
-
-  function closeModalRecurrencia() {
-    setIsOpenRecurrencia(false);
-  }
-
-  function openModalRecurrencia() {
-    setIsOpenRecurrencia(true);
-  }
+  let [isOpenProgresion, setIsOpenProgresion] = useState(false);
 
   function closeModalProgresion() {
     setIsOpenProgresion(false);
@@ -188,91 +198,21 @@ export default function Modal(props: ButtonProps) {
     setIsOpenProgresion(true);
   }
 
-  function closeModalTratamiento() {
-    setIsOpenTratamiento(false);
-  }
-
-  function openModalTratamiento() {
-    setIsOpenTratamiento(true);
-  }
-
-  function closeMoreInfo() {
-    setIsOpenMoreInfo(false);
-  }
-
-  function openMoreInfo() {
-    setIsOpenMoreInfo(true);
-  }
-
-  function closeSign() {
-    setIsOpenSign(false);
-  }
-
-  function openSign() {
-    setIsOpenSign(true);
-  }
-
-  const addMetastasis: SubmitHandler<MetastasisValues> = (data, event) => {
-    event?.stopPropagation();
-    if (data.fecha_diagnostico !== null && data.detalle_topografia !== null) {
-      const newMetastasis: Metastasis = {
-        id: caso?.metastasis ? caso.metastasis.length + 1 : 1,
-        seguimiento_id: seguimiento.id,
-        caso_registro_id: seguimiento.caso_registro_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        ...data,
-        fecha_diagnostico: data.fecha_diagnostico,
-        detalle_topografia: data.detalle_topografia,
-      };
-      setNewMetastasisList((prev: Metastasis[]) => {
-        return [...prev, newMetastasis];
-      });
-      closeModalMetastasis();
-    }
-    // TODO: this shouldn't close the modal, instead it should show an error
-    closeModalMetastasis();
-  };
-
-  const addRecurrencia: SubmitHandler<RecurrenciaValues> = (data) => {
-    if (
-      data.fecha_diagnostico !== null &&
-      data.tipo !== null &&
-      data.detalle_topografia_recurrencia !== null
-    ) {
-      const newRecurrencia: Recurrencia = {
-        id: caso?.recurrencias ? caso.recurrencias.length + 1 : 1,
-        seguimiento_id: seguimiento.id,
-        caso_registro_id: seguimiento.caso_registro_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        ...data,
-        tipo: data.tipo.name,
-        fecha_diagnostico: data.fecha_diagnostico,
-        detalle_topografia_recurrencia: data.detalle_topografia_recurrencia,
-      };
-      setNewRecurrenciaList((prev: Recurrencia[]) => {
-        return [...prev, newRecurrencia];
-      });
-      closeModalRecurrencia();
-    }
-  };
-
-  const addProgresion: SubmitHandler<ProgresionValues> = (data) => {
+  const addProgresion: SubmitHandler<ProgresionFormValues> = (data) => {
     if (
       data.fecha_diagnostico !== null &&
       data.tipo !== null &&
       data.detalle_topografia_progresion !== null
     ) {
       const newProgresion: Progresion = {
-        id: caso?.progresiones ? caso.progresiones.length + 1 : 1,
+        id: 0, // Irrelevant, it will be assigned by the backend
         seguimiento_id: seguimiento.id,
         caso_registro_id: seguimiento.caso_registro_id,
         created_at: new Date(),
         updated_at: new Date(),
-        ...data,
-        tipo: data.tipo.name,
         fecha_diagnostico: data.fecha_diagnostico,
+        fecha_estimada: data.fecha_estimada,
+        tipo: data.tipo,
         detalle_topografia_progresion: data.detalle_topografia_progresion,
       };
       setNewProgresionList((prev: Progresion[]) => {
@@ -282,7 +222,42 @@ export default function Modal(props: ButtonProps) {
     }
   };
 
-  const addTratamiento: SubmitHandler<TratamientoValues> = (data) => {
+  // ================ TRATAMIENTO EN FALP FORM =================
+
+  const tratamientoEnFALPForm = useForm<TratamientoEnFALPFormValues>({
+    defaultValues: {
+      medico: null,
+      fecha_inicio: null,
+      fecha_termino: null,
+      en_tto: false,
+      categoria_tto: null,
+      subcategoria_tto: null,
+      intencion_tto: null,
+      observaciones: null,
+    },
+  });
+
+  const { watch: watchTratamientoEnFALP } = tratamientoEnFALPForm;
+  const medico = watchTratamientoEnFALP("medico");
+  const fecha_inicio = watchTratamientoEnFALP("fecha_inicio");
+  const fecha_termino = watchTratamientoEnFALP("fecha_termino");
+  const categoria_tto = watchTratamientoEnFALP("categoria_tto");
+  const subcategoria_tto = watchTratamientoEnFALP("subcategoria_tto");
+  const intencion_tto = watchTratamientoEnFALP("intencion_tto");
+  const observaciones = watchTratamientoEnFALP("observaciones");
+  const en_tto = watchTratamientoEnFALP("en_tto");
+
+  let [isOpenTratamiento, setIsOpenTratamiento] = useState(false);
+
+  function closeModelTratamientoEnFALP() {
+    setIsOpenTratamiento(false);
+  }
+
+  function openModelTratamientoEnFALP() {
+    setIsOpenTratamiento(true);
+  }
+
+  const addTratamiento: SubmitHandler<TratamientoEnFALPFormValues> = (data) => {
     if (
       data.fecha_inicio !== null &&
       data.fecha_termino !== null &&
@@ -305,18 +280,42 @@ export default function Modal(props: ButtonProps) {
         observaciones: data.observaciones,
         fecha_de_inicio: data.fecha_inicio,
         fecha_de_termino: data.fecha_termino,
-        categoria_tto: data.categoria_tto.name,
-        subcategoria_tto: data.subcategoria_tto.name,
-        intencion_tto: data.intencion_tto.name,
+        categoria_tto: data.categoria_tto,
+        subcategoria_tto: data.subcategoria_tto,
+        intencion_tto: data.intencion_tto,
         en_tto: data.en_tto,
         descripcion_de_la_prestacion: "no esta este campo en el formulario",
       };
       setNewTratamientoList((prev: TratamientoEnFALP[]) => {
         return [...prev, newTratamiento];
       });
-      closeModalTratamiento();
+      closeModelTratamientoEnFALP();
     }
   };
+
+  // ================ MORE INFO MODAL =================
+
+  let [isOpenMoreInfo, setIsOpenMoreInfo] = useState(false);
+
+  function closeMoreInfo() {
+    setIsOpenMoreInfo(false);
+  }
+
+  function openMoreInfo() {
+    setIsOpenMoreInfo(true);
+  }
+
+  // ================ SIGN MODAL =================
+
+  let [isOpenSign, setIsOpenSign] = useState(false);
+
+  function closeSign() {
+    setIsOpenSign(false);
+  }
+
+  function openSign() {
+    setIsOpenSign(true);
+  }
 
   return (
     <>
@@ -343,7 +342,7 @@ export default function Modal(props: ButtonProps) {
           } else if (progresion) {
             openModalProgresion();
           } else if (tratamiento) {
-            openModalTratamiento();
+            openModelTratamientoEnFALP();
           } else if (morePatientInfo) {
             openMoreInfo();
           } else if (sign) {
@@ -543,20 +542,17 @@ export default function Modal(props: ButtonProps) {
                       <Controller
                         name="tipo"
                         control={recurrenciaForm.control}
-                        defaultValue={{ id: 1, name: "Local" }}
+                        defaultValue={TipoRecurrenciaProgresion.local}
                         render={({ field }) => (
                           <div className="col-span-2">
                             <SelectInput
                               label={"Tipo"}
                               options={[
-                                {
-                                  id: 1,
-                                  name: "Local",
-                                },
-                                { id: 2, name: "Regional" },
-                                { id: 3, name: "Metástasis" },
-                                { id: 4, name: "Peritoneal" },
-                                { id: 5, name: "Sin información" },
+                                TipoRecurrenciaProgresion.local,
+                                TipoRecurrenciaProgresion.regional,
+                                TipoRecurrenciaProgresion.metastasis,
+                                TipoRecurrenciaProgresion.peritoneal,
+                                TipoRecurrenciaProgresion.sin_informacion,
                               ]}
                               {...field}
                             />
@@ -669,20 +665,17 @@ export default function Modal(props: ButtonProps) {
                       <Controller
                         name="tipo"
                         control={progresionForm.control}
-                        defaultValue={{ id: 1, name: "Local" }}
+                        defaultValue={TipoRecurrenciaProgresion.local}
                         render={({ field }) => (
                           <div className="col-span-2">
                             <SelectInput
                               label={"Tipo"}
                               options={[
-                                {
-                                  id: 1,
-                                  name: "Local",
-                                },
-                                { id: 2, name: "Regional" },
-                                { id: 3, name: "Metástasis" },
-                                { id: 4, name: "Peritoneal" },
-                                { id: 5, name: "Sin información" },
+                                TipoRecurrenciaProgresion.local,
+                                TipoRecurrenciaProgresion.regional,
+                                TipoRecurrenciaProgresion.metastasis,
+                                TipoRecurrenciaProgresion.peritoneal,
+                                TipoRecurrenciaProgresion.sin_informacion,
                               ]}
                               {...field}
                             />
@@ -733,7 +726,7 @@ export default function Modal(props: ButtonProps) {
         <Dialog
           as="div"
           className="relative z-30"
-          onClose={closeModalTratamiento}
+          onClose={closeModelTratamientoEnFALP}
         >
           <Transition.Child
             as={Fragment}
@@ -762,7 +755,7 @@ export default function Modal(props: ButtonProps) {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      tratamientoForm.handleSubmit(addTratamiento)(e);
+                      tratamientoEnFALPForm.handleSubmit(addTratamiento)(e);
                       e.stopPropagation();
                     }}
                   >
@@ -777,19 +770,19 @@ export default function Modal(props: ButtonProps) {
                         type="button"
                         icon="cross"
                         clear
-                        onClick={closeModalTratamiento}
+                        onClick={closeModelTratamientoEnFALP}
                       />
                     </div>
                     <div className="grid grid-cols-3 items-center gap-6">
                       <div className="col-span-3">
                         <TextInput
                           label="Médico"
-                          {...tratamientoForm.register("medico")}
+                          {...tratamientoEnFALPForm.register("medico")}
                         />
                       </div>
                       <Controller
                         name="fecha_inicio"
-                        control={tratamientoForm.control}
+                        control={tratamientoEnFALPForm.control}
                         render={({ field }) => (
                           <div>
                             <DatePicker label="Inicio" {...field} />
@@ -798,35 +791,32 @@ export default function Modal(props: ButtonProps) {
                       />
                       <Controller
                         name="fecha_termino"
-                        control={tratamientoForm.control}
+                        control={tratamientoEnFALPForm.control}
                         render={({ field }) => (
                           <DatePicker label="Término" {...field} />
                         )}
                       />
                       <Checkbox
                         label="Tratamiento"
-                        {...tratamientoForm.register("en_tto")}
+                        {...tratamientoEnFALPForm.register("en_tto")}
                       />
                     </div>
                     <div className="pt-6 pb-4">Categorización Tratamiento</div>
                     <div className="grid grid-cols-3 items-center gap-6">
                       <Controller
                         name="categoria_tto"
-                        control={tratamientoForm.control}
-                        defaultValue={{
-                          name: "Cirugía o procedimiento quirúrgico",
-                        }}
+                        control={tratamientoEnFALPForm.control}
+                        defaultValue={
+                          CategoriaTTO.cirugia_o_procedimiento_quirurgico
+                        }
                         render={({ field }) => (
                           <SelectInput
                             label={"Categoría"}
                             options={[
-                              {
-                                id: 1,
-                                name: "Cirugía o procedimiento quirúrgico",
-                              },
-                              { id: 2, name: "Terapia sistémica" },
-                              { id: 3, name: "Radioterapia" },
-                              { id: 4, name: "Otro" },
+                              CategoriaTTO.cirugia_o_procedimiento_quirurgico,
+                              CategoriaTTO.terapia_sistemica,
+                              CategoriaTTO.radioterapia,
+                              CategoriaTTO.otro,
                             ]}
                             {...field}
                           />
@@ -834,41 +824,31 @@ export default function Modal(props: ButtonProps) {
                       />
                       <Controller
                         name="subcategoria_tto"
-                        control={tratamientoForm.control}
-                        defaultValue={{ name: "Cirugía" }}
+                        control={tratamientoEnFALPForm.control}
+                        defaultValue={defaultSubcategoriaTTOForCategoriaTTO(
+                          categoria_tto
+                        )}
                         render={({ field }) => (
                           <SelectInput
                             label={"Subcategoría"}
-                            options={[
-                              {
-                                id: 1,
-                                name: "Cirugía",
-                              },
-                              { id: 2, name: "Resección endoscópica" },
-                              {
-                                id: 3,
-                                name: "Biopsia excisional o ampliación de márgenes",
-                              },
-                              { id: 4, name: "Desconocido" },
-                            ]}
+                            options={subcategoriaTTOForCategoriaTTO(
+                              categoria_tto
+                            )}
                             {...field}
                           />
                         )}
                       />
                       <Controller
                         name="intencion_tto"
-                        control={tratamientoForm.control}
-                        defaultValue={{ name: "Curativo" }}
+                        control={tratamientoEnFALPForm.control}
+                        defaultValue={IntencionTTO.curativo}
                         render={({ field }) => (
                           <SelectInput
                             label={"Intención"}
                             options={[
-                              {
-                                id: 1,
-                                name: "Curativo",
-                              },
-                              { id: 2, name: "Paliativo" },
-                              { id: 3, name: "Desconocido" },
+                              IntencionTTO.curativo,
+                              IntencionTTO.paliativo,
+                              IntencionTTO.desconocido,
                             ]}
                             {...field}
                           />
@@ -878,12 +858,15 @@ export default function Modal(props: ButtonProps) {
                       <div className="col-span-3">
                         <TextInput
                           label="Observaciones"
-                          {...tratamientoForm.register("observaciones")}
+                          {...tratamientoEnFALPForm.register("observaciones")}
                         />
                       </div>
                     </div>
                     <div className="mt-6 flex justify-between">
-                      <Button type="button" onClick={closeModalTratamiento}>
+                      <Button
+                        type="button"
+                        onClick={closeModelTratamientoEnFALP}
+                      >
                         Cancelar
                       </Button>
                       <Button

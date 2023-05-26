@@ -68,7 +68,7 @@ export enum TipoRecurrenciaProgresion {
 
 export enum CategoriaTTO {
   cirugia_o_procedimiento_quirurgico = "Cirugía o procedimiento quirúrgico",
-  terapia_sistematica = "Terapia sistémica",
+  terapia_sistemica = "Terapia sistémica",
   radioterapia = "Radioterapia",
   otro = "Otro",
 }
@@ -80,7 +80,7 @@ export enum SubcategoriaTTOCirugiaOProcedimientoQuirurgico {
   desconocido = "Desconocido",
 }
 
-export enum SubcategoriaTTOTerapiaSistematica {
+export enum SubcategoriaTTOTerapiaSistemica {
   quimioterapia = "Quimioterapia",
   inmunoterapia = "Inmunoterapia",
   terapias_moleculares = "Terapias moleculares",

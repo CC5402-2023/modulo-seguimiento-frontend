@@ -17,3 +17,14 @@ export interface Metastasis extends MetastasisBase {
   created_at: Date;
   updated_at: Date;
 }
+
+/**
+ * MetastasisFormValues interface, used for representing the values of the
+ * metastasis form before submitting it. When we submit this form, we will
+ * create a new MetastasisCreate object with the values of this interface.
+ */
+export interface MetastasisFormValues {
+  fecha_diagnostico: Date | null;
+  fecha_estimada: boolean;
+  detalle_topografia: string | null;
+}
