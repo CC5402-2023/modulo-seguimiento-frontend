@@ -18,6 +18,7 @@ import { Seguimiento } from "@/types/Seguimiento";
 import { Metastasis, MetastasisFormValues } from "@/types/Metastasis";
 import { Recurrencia, RecurrenciaFormValues } from "@/types/Recurrencia";
 import { Progresion, ProgresionFormValues } from "@/types/Progresion";
+import * as fns from "date-fns";
 import {
   TratamientoEnFALP,
   TratamientoEnFALPFormValues,
@@ -103,9 +104,9 @@ export default function Modal(props: ButtonProps) {
         id: 0, // Irrelevant, it will be assigned by the backend
         seguimiento_id: seguimiento.id,
         caso_registro_id: seguimiento.caso_registro_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        fecha_diagnostico: data.fecha_diagnostico,
+        created_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        updated_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        fecha_diagnostico: fns.format(data.fecha_diagnostico, "yyyy-MM-dd"),
         fecha_estimada: data.fecha_estimada,
         detalle_topografia: data.detalle_topografia,
       };
@@ -156,9 +157,9 @@ export default function Modal(props: ButtonProps) {
         id: 0, // Irrelevant, it will be assigned by the backend
         seguimiento_id: seguimiento.id,
         caso_registro_id: seguimiento.caso_registro_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        fecha_diagnostico: data.fecha_diagnostico,
+        created_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        updated_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        fecha_diagnostico: fns.format(data.fecha_diagnostico, "yyyy-MM-dd"),
         fecha_estimada: data.fecha_estimada,
         tipo: data.tipo,
         detalle_topografia_recurrencia: data.detalle_topografia_recurrencia,
@@ -208,9 +209,9 @@ export default function Modal(props: ButtonProps) {
         id: 0, // Irrelevant, it will be assigned by the backend
         seguimiento_id: seguimiento.id,
         caso_registro_id: seguimiento.caso_registro_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        fecha_diagnostico: data.fecha_diagnostico,
+        created_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        updated_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        fecha_diagnostico: fns.format(data.fecha_diagnostico, "yyyy-MM-dd"),
         fecha_estimada: data.fecha_estimada,
         tipo: data.tipo,
         detalle_topografia_progresion: data.detalle_topografia_progresion,
@@ -227,8 +228,8 @@ export default function Modal(props: ButtonProps) {
   const tratamientoEnFALPForm = useForm<TratamientoEnFALPFormValues>({
     defaultValues: {
       medico: null,
-      fecha_inicio: null,
-      fecha_termino: null,
+      fecha_de_inicio: null,
+      fecha_de_termino: null,
       en_tto: false,
       categoria_tto: null,
       subcategoria_tto: null,
@@ -239,8 +240,8 @@ export default function Modal(props: ButtonProps) {
 
   const { watch: watchTratamientoEnFALP } = tratamientoEnFALPForm;
   const medico = watchTratamientoEnFALP("medico");
-  const fecha_inicio = watchTratamientoEnFALP("fecha_inicio");
-  const fecha_termino = watchTratamientoEnFALP("fecha_termino");
+  const fecha_de_inicio = watchTratamientoEnFALP("fecha_de_inicio");
+  const fecha_de_termino = watchTratamientoEnFALP("fecha_de_termino");
   const categoria_tto = watchTratamientoEnFALP("categoria_tto");
   const subcategoria_tto = watchTratamientoEnFALP("subcategoria_tto");
   const intencion_tto = watchTratamientoEnFALP("intencion_tto");
@@ -257,37 +258,36 @@ export default function Modal(props: ButtonProps) {
     setIsOpenTratamiento(true);
   }
 
-  const addTratamiento: SubmitHandler<TratamientoEnFALPFormValues> = (data) => {
+  const addTratamientoEnFALP: SubmitHandler<TratamientoEnFALPFormValues> = (
+    data
+  ) => {
     if (
-      data.fecha_inicio !== null &&
-      data.fecha_termino !== null &&
+      data.fecha_de_inicio !== null &&
+      data.fecha_de_termino !== null &&
       data.categoria_tto !== null &&
       data.subcategoria_tto !== null &&
       data.intencion_tto !== null &&
       data.medico !== null &&
       data.observaciones !== null
     ) {
-      const newTratamiento: TratamientoEnFALP = {
-        id: caso?.tratamientos_en_falp
-          ? caso.tratamientos_en_falp.length + 1
-          : 1,
+      const newTratamientoEnFALP: TratamientoEnFALP = {
+        id: 0, // Irrelevant, it will be assigned by the backend
         seguimiento_id: seguimiento.id,
         caso_registro_id: seguimiento.caso_registro_id,
-        created_at: new Date(),
-        updated_at: new Date(),
-        ...data,
+        created_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        updated_at: fns.format(new Date(), "yyyy-MM-dd HH:mm:ss"),
         medico: data.medico,
-        observaciones: data.observaciones,
-        fecha_de_inicio: data.fecha_inicio,
-        fecha_de_termino: data.fecha_termino,
+        fecha_de_inicio: fns.format(data.fecha_de_inicio, "yyyy-MM-dd"),
+        fecha_de_termino: fns.format(data.fecha_de_termino, "yyyy-MM-dd"),
+        en_tto: data.en_tto,
         categoria_tto: data.categoria_tto,
         subcategoria_tto: data.subcategoria_tto,
         intencion_tto: data.intencion_tto,
-        en_tto: data.en_tto,
-        descripcion_de_la_prestacion: "no esta este campo en el formulario",
+        descripcion_de_la_prestacion: null, // TODO: Agregar campo en el formulario
+        observaciones: data.observaciones,
       };
       setNewTratamientoList((prev: TratamientoEnFALP[]) => {
-        return [...prev, newTratamiento];
+        return [...prev, newTratamientoEnFALP];
       });
       closeModelTratamientoEnFALP();
     }
@@ -755,7 +755,9 @@ export default function Modal(props: ButtonProps) {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      tratamientoEnFALPForm.handleSubmit(addTratamiento)(e);
+                      tratamientoEnFALPForm.handleSubmit(addTratamientoEnFALP)(
+                        e
+                      );
                       e.stopPropagation();
                     }}
                   >
@@ -781,7 +783,7 @@ export default function Modal(props: ButtonProps) {
                         />
                       </div>
                       <Controller
-                        name="fecha_inicio"
+                        name="fecha_de_inicio"
                         control={tratamientoEnFALPForm.control}
                         render={({ field }) => (
                           <div>
@@ -790,7 +792,7 @@ export default function Modal(props: ButtonProps) {
                         )}
                       />
                       <Controller
-                        name="fecha_termino"
+                        name="fecha_de_termino"
                         control={tratamientoEnFALPForm.control}
                         render={({ field }) => (
                           <DatePicker label="Término" {...field} />
@@ -874,8 +876,8 @@ export default function Modal(props: ButtonProps) {
                         type="submit"
                         disabled={
                           !medico ||
-                          !fecha_inicio ||
-                          !fecha_termino ||
+                          !fecha_de_inicio ||
+                          !fecha_de_termino ||
                           !categoria_tto ||
                           !subcategoria_tto ||
                           !intencion_tto ||
@@ -883,8 +885,8 @@ export default function Modal(props: ButtonProps) {
                         }
                         title={
                           !medico ||
-                          !fecha_inicio ||
-                          !fecha_termino ||
+                          !fecha_de_inicio ||
+                          !fecha_de_termino ||
                           !categoria_tto ||
                           !subcategoria_tto ||
                           !intencion_tto ||

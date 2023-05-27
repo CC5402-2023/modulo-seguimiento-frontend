@@ -71,8 +71,8 @@ export default function MetastasisList(props: MetastasisListProps) {
       sorting: [
         {
           id: "updated_at",
-          desc: true
-        }
+          desc: true,
+        },
       ],
       pagination: {
         pageSize: 5,

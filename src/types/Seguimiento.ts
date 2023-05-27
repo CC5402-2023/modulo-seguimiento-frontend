@@ -16,9 +16,9 @@ export interface SeguimientoBase {
   posee_metastasis: boolean;
   posee_tto: boolean;
   condicion_del_caso: CondicionCaso | null;
-  ultimo_contacto: Date | null;
+  ultimo_contacto: string | null;
   estado_vital: EstadoVital | null;
-  fecha_defuncion: Date | null;
+  fecha_defuncion: string | null;
   causa_defuncion: string | null;
   tiene_consulta_nueva: boolean;
   tiene_examenes: boolean;
@@ -38,9 +38,9 @@ export interface Seguimiento extends SeguimientoBase {
   id: number;
   usuario_id: number | null;
   caso_registro_id: number;
-  created_at: Date;
-  updated_at: Date | null;
-  fecha_asignacion: Date | null;
+  created_at: string;
+  updated_at: string | null;
+  fecha_asignacion: string | null;
   state: SeguimientoState;
   tipo_seguimiento: TipoSeguimiento;
   numero_seguimiento: number;

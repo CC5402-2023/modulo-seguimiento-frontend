@@ -9,8 +9,8 @@ import {
 
 export interface TratamientoEnFALPBase {
   medico: string;
-  fecha_de_inicio: Date;
-  fecha_de_termino: Date;
+  fecha_de_inicio: string;
+  fecha_de_termino: string;
   en_tto: boolean;
   categoria_tto: CategoriaTTO;
   subcategoria_tto:
@@ -34,8 +34,8 @@ export interface TratamientoEnFALP extends TratamientoEnFALPBase {
   id: number;
   seguimiento_id: number | null;
   caso_registro_id: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -45,8 +45,8 @@ export interface TratamientoEnFALP extends TratamientoEnFALPBase {
  */
 export interface TratamientoEnFALPFormValues {
   medico: string | null;
-  fecha_inicio: Date | null;
-  fecha_termino: Date | null;
+  fecha_de_inicio: Date | null;
+  fecha_de_termino: Date | null;
   en_tto: boolean;
   categoria_tto: CategoriaTTO | null;
   subcategoria_tto:

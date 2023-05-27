@@ -10,5 +10,5 @@ export interface Comentario extends ComentarioBase {
   seguimiento_id: number;
   caso_registro_id: number;
   nombre_usuario: string;
-  created_at: Date;
+  created_at: string;
 }

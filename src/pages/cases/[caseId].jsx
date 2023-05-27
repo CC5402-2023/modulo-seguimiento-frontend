@@ -4,5 +4,5 @@ import CaseForm from "@/components/cases/CaseForm";
 export default function CaseDetailPage() {
   const router = useRouter();
   const { caseId } = router.query;
-  return <CaseForm caseId={caseId} />;
+  return <CaseForm seguimientoId={caseId} />;
 }

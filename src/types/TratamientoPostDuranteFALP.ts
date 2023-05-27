@@ -9,7 +9,7 @@ import {
 } from "./Enums";
 
 export interface TratamientoPostDuranteFALPBase {
-  fecha_de_inicio: Date;
+  fecha_de_inicio: string;
   fecha_estimada: boolean;
   categoria_tto: CategoriaTTO;
   subcategoria_tto:
@@ -35,6 +35,6 @@ export interface TratamientoPostDuranteFALP
   id: number;
   seguimiento_id: number | null;
   caso_registro_id: number;
-  created_at: Date;
-  updated_at: Date | null;
+  created_at: string;
+  updated_at: string | null;
 }
